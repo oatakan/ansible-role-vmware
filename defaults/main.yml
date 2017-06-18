@@ -1,0 +1,10 @@
+---
+# defaults file for vmware
+vcenter:
+  hostname: localhost
+  username: Administrator@localhost
+  password: password
+  datacenter: mydatacenter
+  cluster: mycluster
+  resource_pool: ~
+
