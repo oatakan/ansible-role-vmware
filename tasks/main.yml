@@ -10,7 +10,9 @@
     resource_pool: "{{ providers.vcenter.resource_pool|default('') }}"
     name: "{{ item.name }}"
     template: "{{ item.template }}"
-    customvalues: "{{ item.customvalues|default(omit) }}"
+    snapshot_src: "{{ item.snapshot_src|default('') }}"
+    linked_clone: "{{ item.linked_clone|default('') }}"
+    customvalues: "{{ item.customvalues|default('') }}"
     state: poweredon
     wait_for_ip_address: yes
     disk: "{{ item.disk|default(omit) }}"
