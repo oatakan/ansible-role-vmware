@@ -21,9 +21,7 @@
       num_cpus: "{{ item.cpu }}"
       scsi: paravirtual
     networks: "{{ item.networks }}"
-    customization:
-      domain: "{{ item.domain }}"
-      dns_servers: "{{ item.dns_servers|default([]) }}"
+    customization: "{{ item.customization|default(omit) }}"
   async: 7200
   poll: 0
   register: deploy
@@ -35,14 +33,15 @@
     jid: "{{ item.ansible_job_id }}"
   register: instances
   until: instances.finished
-  retries: 300
+  retries: "{{ instance_wait_retry_limit }}"
   delay: 10
   with_items: "{{ deploy.results }}"
 
 - name: Waiting for servers to come online
   wait_for:
     host: "{{ item.instance.hw_eth0.ipaddresses[0] }}"
-    port: "22"
-    search_regex: OpenSSH
+    port: "{{ ansible_port }}"
+    timeout: "{{ instance_wait_connection_timeout }}"
   with_items: "{{ instances.results }}"
   when: (instances | changed) and (item.instance is defined)
+  ignore_errors: yes
