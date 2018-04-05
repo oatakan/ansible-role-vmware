@@ -8,6 +8,7 @@
     datacenter: "{{ providers.vcenter.datacenter }}"
     cluster: "{{ providers.vcenter.cluster }}"
     resource_pool: "{{ providers.vcenter.resource_pool|default('') }}"
+    folder: "{{ providers.vcenter.folder|default('') }}"
     name: "{{ item.name }}"
     template: "{{ item.template }}"
     snapshot_src: "{{ item.snapshot_src|default(omit) }}"
