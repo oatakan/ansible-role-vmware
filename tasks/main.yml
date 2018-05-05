@@ -63,5 +63,5 @@
   with_items: "{{ instances.results }}"
 
 - debug:
-    var: item
+    var: item.instance
   with_items: "{{ instance_facts.results }}"
