@@ -52,7 +52,7 @@
   ignore_errors: yes
 
 - pause:
-    seconds: 30
+    seconds: 60
 
 - name: gather facts from vcenter
   vmware_guest_facts:
