@@ -39,14 +39,14 @@
   with_items: "{{ deploy.results }}"
 
 - debug:
-    var: item.item
+    var: item.item.item.networks[0].ip
   with_items: "{{ instances.results }}"
 
 - name: waiting for servers to come online
   wait_for:
-    host: "{{ item.instance.ipv4 }}"
+    host: "{{ item.item.item.networks[0].ip | default(item.instance.ipv4) }}"
     port: "{{ ansible_port }}"
     timeout: "{{ instance_wait_connection_timeout }}"
   with_items: "{{ instances.results }}"
-  when: (instances | changed) and (item.instance is defined) and (
+  when: (instances | changed) and (item.instance is defined)
   ignore_errors: yes
