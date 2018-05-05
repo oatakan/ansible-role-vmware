@@ -38,6 +38,10 @@
   delay: 10
   with_items: "{{ deploy.results }}"
 
+- debug:
+    var: item.instance.hw_eth0.ipaddresses[0]
+  with_items: "{{ instances.results }}"
+
 - name: Waiting for servers to come online
   wait_for:
     host: "{{ item.instance.hw_eth0.ipaddresses[0] }}"
