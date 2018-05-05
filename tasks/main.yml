@@ -51,6 +51,9 @@
   when: (instances | changed) and (item.instance is defined)
   ignore_errors: yes
 
+- pause:
+    seconds: 30
+
 - name: gather facts from vcenter
   vmware_guest_facts:
     hostname: "{{ lookup('env', 'VMWARE_HOST')|default(providers.vcenter.hostname) }}"
