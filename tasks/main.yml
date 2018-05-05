@@ -55,6 +55,10 @@
 - pause:
     seconds: 90
 
+- debug:
+    var: item.instance.hw_product_uuid
+  with_items: "{{ instances.results }}"
+
 - name: gather facts from vcenter
   vmware_guest_facts:
     hostname: "{{ lookup('env', 'VMWARE_HOST')|default(providers.vcenter.hostname) }}"
@@ -62,7 +66,7 @@
     password: "{{ lookup('env', 'VMWARE_PASSWORD')|default(providers.vcenter.password) }}"
     datacenter: "{{ providers.vcenter.datacenter }}"
     validate_certs: no
-    name: "{{ item.instance.hw_name }}"
+    uuid: "{{ item.instance.hw_product_uuid }}"
   register: instance_facts
   with_items: "{{ instances.results }}"
 
