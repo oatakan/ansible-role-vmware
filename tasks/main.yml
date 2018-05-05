@@ -56,7 +56,7 @@
     seconds: 90
 
 - debug:
-    var: item.instance.hw_product_uuid | regex_replace('{{ "********" }}', '20')
+    var: item.instance.hw_product_uuid | replace('{{ "********" }}', '20')
   with_items: "{{ instances.results }}"
 
 - name: gather facts from vcenter
