@@ -58,7 +58,7 @@
     password: "{{ lookup('env', 'VMWARE_PASSWORD')|default(providers.vcenter.password) }}"
     datacenter: "{{ providers.vcenter.datacenter }}"
     validate_certs: no
-    uuid: "{{ item.instance.hw_product_uuid }}"
+    name: "{{ item.instance.hw_name }}"
   register: instance_facts
   with_items: "{{ instances.results }}"
 
