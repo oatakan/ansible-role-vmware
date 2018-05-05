@@ -39,7 +39,7 @@
   with_items: "{{ deploy.results }}"
 
 - debug:
-    var: item.item.item.networks[0].ip
+    var: item.item.item.networks[0].ip | default(item.instance.ipv4)
   with_items: "{{ instances.results }}"
 
 - name: waiting for servers to come online
