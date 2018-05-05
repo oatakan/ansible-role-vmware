@@ -42,13 +42,17 @@
     var: item.instance
   with_items: "{{ instances.results }}"
 
+- debug:
+    var: item.instance.hw_product_uuid
+  with_items: "{{ instances.results }}"
+
 - name: wait for VMware tools to become available
   vmware_guest_tools_wait:
     hostname: "{{ lookup('env', 'VMWARE_HOST')|default(providers.vcenter.hostname) }}"
     username: "{{ lookup('env', 'VMWARE_USER')|default(providers.vcenter.username) }}"
     password: "{{ lookup('env', 'VMWARE_PASSWORD')|default(providers.vcenter.password) }}"
     validate_certs: no
-    uuid: "{{ item.instance.instance_uuid }}"
+    uuid: "{{ item.instance.hw_product_uuid }}"
   register: facts
   with_items: "{{ instances.results }}"
 
