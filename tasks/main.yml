@@ -38,11 +38,20 @@
   delay: 10
   with_items: "{{ deploy.results }}"
 
+#- name: Waiting for servers to come online
+#  wait_for:
+#    host: "{{ item.instance.hw_eth0.ipaddresses[0] }}"
+#    port: "{{ ansible_port }}"
+#    timeout: "{{ instance_wait_connection_timeout }}"
+#  with_items: "{{ instances.results }}"
+#  when: (instances | changed) and (item.instance is defined)
+#  ignore_errors: yes
+
+
 - name: Waiting for servers to come online
-  wait_for:
-    host: "{{ item.instance.hw_eth0.ipaddresses[0] }}"
-    port: "{{ ansible_port }}"
+  wait_for_connection:
     timeout: "{{ instance_wait_connection_timeout }}"
+  delegate_to: "{{ item.instance.hw_eth0.ipaddresses[0] }}"
   with_items: "{{ instances.results }}"
   when: (instances | changed) and (item.instance is defined)
   ignore_errors: yes
