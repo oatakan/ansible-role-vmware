@@ -29,7 +29,7 @@
   with_items: "{{ nodes }}"
   when: nodes is defined
 
-- name: Wait for instance creation to complete
+- name: wait for instance creation to complete
   async_status:
     jid: "{{ item.ansible_job_id }}"
   register: instances
@@ -38,7 +38,11 @@
   delay: 10
   with_items: "{{ deploy.results }}"
 
-- name: Waiting for servers to come online
+- debug:
+    var: item.instance
+  with_items: "{{ instances.results }}"
+
+- name: waiting for servers to come online
   wait_for:
     host: "{{ item.instance.ipv4 }}"
     port: "{{ ansible_port }}"
@@ -46,3 +50,18 @@
   with_items: "{{ instances.results }}"
   when: (instances | changed) and (item.instance is defined)
   ignore_errors: yes
+
+- name: gather facts from vcenter
+  vmware_guest_facts:
+    hostname: "{{ lookup('env', 'VMWARE_HOST')|default(providers.vcenter.hostname) }}"
+    username: "{{ lookup('env', 'VMWARE_USER')|default(providers.vcenter.username) }}"
+    password: "{{ lookup('env', 'VMWARE_PASSWORD')|default(providers.vcenter.password) }}"
+    datacenter: "{{ providers.vcenter.datacenter }}"
+    validate_certs: no
+    uuid: "{{ item.instance.instance_uuid }}"
+  register: instance_facts
+  with_items: "{{ instances.results }}"
+
+- debug:
+    var: item
+  with_items: "{{ instance_facts.results }}"
