@@ -39,8 +39,8 @@
   with_items: "{{ deploy.results }}"
 
 - debug:
-    var: item
-  with_items: "{{ instances.results }}"
+    var: item.results
+  with_items: "{{ instances }}"
 
 - name: waiting for servers to come online
   wait_for:
