@@ -48,5 +48,7 @@
     port: "{{ ansible_port }}"
     timeout: "{{ instance_wait_connection_timeout }}"
   with_items: "{{ instances.results }}"
-  when: (instances | changed) and (item.instance is defined)
+  when:
+    - instances is changed
+    - item.instance is defined
   ignore_errors: yes
