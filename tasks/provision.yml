@@ -48,11 +48,11 @@
     hostname: "{{ lookup('env', 'VMWARE_HOST')|default(providers.vcenter.hostname) }}"
     username: "{{ lookup('env', 'VMWARE_USER')|default(providers.vcenter.username) }}"
     password: "{{ lookup('env', 'VMWARE_PASSWORD')|default(providers.vcenter.password) }}"
-    uuid: "{{ item.instance.hw_product_uuid }}"
+    uuid: "{{ item.instance.hw_product_uuid | replace('********', '20') }}"
     state: present
     attributes:
       - name: app_name
-        value: "{{ item.item.item.app_name | replace('********', '20') | default('') }}"
+        value: "{{ item.item.item.app_name | default('') }}"
       - name: role
         value: "{{ item.item.item.role | default('') }}"
   loop: "{{ instances.results }}"
