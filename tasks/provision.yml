@@ -39,61 +39,61 @@
   delay: 10
   loop: "{{ deploy.results }}"
 
-- name: gather category id from given tag category
-  vmware_category_facts:
-    hostname: "{{ lookup('env', 'VMWARE_HOST')|default(providers.vcenter.hostname) }}"
-    username: "{{ lookup('env', 'VMWARE_USER')|default(providers.vcenter.username) }}"
-    password: "{{ lookup('env', 'VMWARE_PASSWORD')|default(providers.vcenter.password) }}"
-  register: tag_category_results
-  ignore_errors: yes
-
-- name: set category id for app
-  set_fact:
-    app_tag_category_id: "{{ item.category_id }}"
-  with_items: "{{ tag_category_results.tag_category_facts|json_query(query) }}"
-  vars:
-    query: "[?category_name==`app`]"
-
-- debug:
-    var: app_tag_category_id
-
-- name: set category id for app
-  set_fact:
-    role_tag_category_id: "{{ item.category_id }}"
-  with_items: "{{ tag_category_results.tag_category_facts|json_query(query) }}"
-  vars:
-    query: "[?category_name==`role`]"
-
-- debug:
-    var: role_tag_category_id
-
-- name: assign app tags
-  vmware_tag:
-    hostname: "{{ lookup('env', 'VMWARE_HOST')|default(providers.vcenter.hostname) }}"
-    username: "{{ lookup('env', 'VMWARE_USER')|default(providers.vcenter.username) }}"
-    password: "{{ lookup('env', 'VMWARE_PASSWORD')|default(providers.vcenter.password) }}"
-    validate_certs: no
-    category_id: "{{ app_tag_category_id }}"
-    tag_name: "{{ item.app_name }}"
-    tag_description: "{{ item.app_name }}"
-    state: present
-  loop: "{{ nodes }}"
-  when: item.app_name is defined
-  ignore_errors: yes
-
-- name: assign role tags
-  vmware_tag:
-    hostname: "{{ lookup('env', 'VMWARE_HOST')|default(providers.vcenter.hostname) }}"
-    username: "{{ lookup('env', 'VMWARE_USER')|default(providers.vcenter.username) }}"
-    password: "{{ lookup('env', 'VMWARE_PASSWORD')|default(providers.vcenter.password) }}"
-    validate_certs: no
-    category_id: "{{ role_tag_category_id }}"
-    tag_name: "{{ item.role }}"
-    tag_description: "{{ item.role }}"
-    state: present
-  loop: "{{ nodes }}"
-  when: item.role is defined
-  ignore_errors: yes
+#- name: gather category id from given tag category
+#  vmware_category_facts:
+#    hostname: "{{ lookup('env', 'VMWARE_HOST')|default(providers.vcenter.hostname) }}"
+#    username: "{{ lookup('env', 'VMWARE_USER')|default(providers.vcenter.username) }}"
+#    password: "{{ lookup('env', 'VMWARE_PASSWORD')|default(providers.vcenter.password) }}"
+#  register: tag_category_results
+#  ignore_errors: yes
+#
+#- name: set category id for app
+#  set_fact:
+#    app_tag_category_id: "{{ item.category_id }}"
+#  with_items: "{{ tag_category_results.tag_category_facts|json_query(query) }}"
+#  vars:
+#    query: "[?category_name==`app`]"
+#
+#- debug:
+#    var: app_tag_category_id
+#
+#- name: set category id for app
+#  set_fact:
+#    role_tag_category_id: "{{ item.category_id }}"
+#  with_items: "{{ tag_category_results.tag_category_facts|json_query(query) }}"
+#  vars:
+#    query: "[?category_name==`role`]"
+#
+#- debug:
+#    var: role_tag_category_id
+#
+#- name: assign app tags
+#  vmware_tag:
+#    hostname: "{{ lookup('env', 'VMWARE_HOST')|default(providers.vcenter.hostname) }}"
+#    username: "{{ lookup('env', 'VMWARE_USER')|default(providers.vcenter.username) }}"
+#    password: "{{ lookup('env', 'VMWARE_PASSWORD')|default(providers.vcenter.password) }}"
+#    validate_certs: no
+#    category_id: "{{ app_tag_category_id }}"
+#    tag_name: "{{ item.app_name }}"
+#    tag_description: "{{ item.app_name }}"
+#    state: present
+#  loop: "{{ nodes }}"
+#  when: item.app_name is defined
+#  ignore_errors: yes
+#
+#- name: assign role tags
+#  vmware_tag:
+#    hostname: "{{ lookup('env', 'VMWARE_HOST')|default(providers.vcenter.hostname) }}"
+#    username: "{{ lookup('env', 'VMWARE_USER')|default(providers.vcenter.username) }}"
+#    password: "{{ lookup('env', 'VMWARE_PASSWORD')|default(providers.vcenter.password) }}"
+#    validate_certs: no
+#    category_id: "{{ role_tag_category_id }}"
+#    tag_name: "{{ item.role }}"
+#    tag_description: "{{ item.role }}"
+#    state: present
+#  loop: "{{ nodes }}"
+#  when: item.role is defined
+#  ignore_errors: yes
 
 - debug:
     var: item.item.item.networks[0].ip | default(item.instance.ipv4)
