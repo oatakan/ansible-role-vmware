@@ -39,10 +39,6 @@
   delay: 10
   loop: "{{ deploy.results }}"
 
-- debug:
-    var: hw_name
-  loop: "{{ instances.results }}"
-
 - name: add custom attributes
   vmware_guest_custom_attributes:
     hostname: "{{ lookup('env', 'VMWARE_HOST')|default(providers.vcenter.hostname) }}"
