@@ -40,7 +40,7 @@
   loop: "{{ deploy.results }}"
 
 - debug:
-    var: item
+    var: item.instance.hw_product_uuid
   loop: "{{ instances.results }}"
 
 - name: add custom attributes
@@ -48,7 +48,7 @@
     hostname: "{{ lookup('env', 'VMWARE_HOST')|default(providers.vcenter.hostname) }}"
     username: "{{ lookup('env', 'VMWARE_USER')|default(providers.vcenter.username) }}"
     password: "{{ lookup('env', 'VMWARE_PASSWORD')|default(providers.vcenter.password) }}"
-    uuid: "{{ item.instance.instance_uuid }}"
+    uuid: "{{ item.instance.hw_product_uuid }}"
     state: present
     attributes:
       - name: app_name
