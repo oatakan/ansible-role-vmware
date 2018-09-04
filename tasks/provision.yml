@@ -52,6 +52,10 @@
       - name: role
         value: "{{ item.item.item.role | default('') }}"
   loop: "{{ instances.results }}"
+  when:
+    - instances is defined
+    - item.instance is defined
+  ignore_errors: yes
 
 - debug:
     var: item.item.item.networks[0].ip | default(item.instance.ipv4)
@@ -64,6 +68,6 @@
     timeout: "{{ instance_wait_connection_timeout }}"
   loop: "{{ instances.results }}"
   when:
-    - instances is changed
+    - instances is defined
     - item.instance is defined
   ignore_errors: yes
