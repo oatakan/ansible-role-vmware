@@ -1,6 +1,6 @@
 ---
 
-- include: provision.yml
+- include_tasks: provision.yml
   when: role_action == 'provision'
 
 - import_tasks: deprovision.yml
