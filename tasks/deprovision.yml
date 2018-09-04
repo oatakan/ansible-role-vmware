@@ -10,6 +10,7 @@
     uuid: "{{ hostvars[inventory_hostname].config.uuid }}"
     state: poweredoff
   delegate_to: 127.0.0.1
+  connection: local
   loop: "{{ nodes }}"
   when:
     - nodes is defined
@@ -26,6 +27,7 @@
     uuid: "{{ hostvars[inventory_hostname].config.uuid }}"
     state: absent
   delegate_to: 127.0.0.1
+  connection: local
   loop: "{{ nodes }}"
   when:
     - nodes is defined
