@@ -40,7 +40,7 @@
   loop: "{{ deploy.results }}"
 
 - debug:
-    var: item.instance.hw_product_uuid
+    var: item.instance.hw_product_uuid | replace('********', '20')
   loop: "{{ instances.results }}"
 
 - name: add custom attributes
@@ -52,7 +52,7 @@
     state: present
     attributes:
       - name: app_name
-        value: "{{ item.item.item.app_name | default('') }}"
+        value: "{{ item.item.item.app_name | replace('********', '20') | default('') }}"
       - name: role
         value: "{{ item.item.item.role | default('') }}"
   loop: "{{ instances.results }}"
