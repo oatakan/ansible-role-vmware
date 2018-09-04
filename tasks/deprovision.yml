@@ -9,7 +9,6 @@
     name: "{{ inventory_hostname }}"
     uuid: "{{ hostvars[inventory_hostname].config.uuid }}"
     state: poweredoff
-  delegate_to: localhost
   loop: "{{ nodes }}"
   when:
     - nodes is defined
@@ -25,7 +24,6 @@
     name: "{{ inventory_hostname }}"
     uuid: "{{ hostvars[inventory_hostname].config.uuid }}"
     state: absent
-  delegate_to: localhost
   loop: "{{ nodes }}"
   when:
     - nodes is defined
