@@ -1,5 +1,7 @@
 ---
-# defaults file for vmware
+
+role_action: provision
+
 vcenter:
   hostname: localhost
   username: Administrator@localhost

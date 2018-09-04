@@ -1,54 +1,7 @@
 ---
-- name: clone template and customize
-  vmware_guest:
-    hostname: "{{ lookup('env', 'VMWARE_HOST')|default(providers.vcenter.hostname) }}"
-    username: "{{ lookup('env', 'VMWARE_USER')|default(providers.vcenter.username) }}"
-    password: "{{ lookup('env', 'VMWARE_PASSWORD')|default(providers.vcenter.password) }}"
-    validate_certs: no
-    datacenter: "{{ providers.vcenter.datacenter }}"
-    cluster: "{{ providers.vcenter.cluster }}"
-    resource_pool: "{{ providers.vcenter.resource_pool|default('') }}"
-    folder: "{{ providers.vcenter.folder|default('') }}"
-    name: "{{ item.name }}"
-    template: "{{ item.template }}"
-    snapshot_src: "{{ item.snapshot_src|default(omit) }}"
-    linked_clone: "{{ item.linked_clone|default(omit) }}"
-    customvalues: "{{ item.customvalues|default(omit) }}"
-    state: poweredon
-    wait_for_ip_address: yes
-    disk: "{{ item.disk|default(omit) }}"
-    hardware:
-      memory_mb: "{{ item.memory }}"
-      num_cpus: "{{ item.cpu }}"
-      scsi: paravirtual
-    networks: "{{ item.networks }}"
-    customization: "{{ item.customization|default(omit) }}"
-  async: 7200
-  poll: 0
-  register: deploy
-  with_items: "{{ nodes }}"
-  when: nodes is defined
 
-- name: wait for instance creation to complete
-  async_status:
-    jid: "{{ item.ansible_job_id }}"
-  register: instances
-  until: instances.finished
-  retries: "{{ instance_wait_retry_limit }}"
-  delay: 10
-  with_items: "{{ deploy.results }}"
+- include: provision.yml
+  when: role_action == 'provision'
 
-- debug:
-    var: item.item.item.networks[0].ip | default(item.instance.ipv4)
-  with_items: "{{ instances.results }}"
-
-- name: waiting for servers to come online
-  wait_for:
-    host: "{{ item.item.item.networks[0].ip | default(item.instance.ipv4) }}"
-    port: "{{ ansible_port }}"
-    timeout: "{{ instance_wait_connection_timeout }}"
-  with_items: "{{ instances.results }}"
-  when:
-    - instances is changed
-    - item.instance is defined
-  ignore_errors: yes
+- include: deprovision.yml
+  when: role_action == 'deprovision'
