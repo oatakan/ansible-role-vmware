@@ -40,7 +40,7 @@
   loop: "{{ deploy.results }}"
 
 - debug:
-    var: item.instance.hw_product_uuid | replace('********', '20')
+    msg: "{{ item.instance.hw_product_uuid | replace('********', '20') }}"
   loop: "{{ instances.results }}"
 
 - name: add custom attributes
