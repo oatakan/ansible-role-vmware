@@ -43,12 +43,12 @@
     var: item
   loop: "{{ instances.results }}"
 
-- name: Add multiple virtual machine custom attributes
+- name: add custom attributes
   vmware_guest_custom_attributes:
     hostname: "{{ lookup('env', 'VMWARE_HOST')|default(providers.vcenter.hostname) }}"
     username: "{{ lookup('env', 'VMWARE_USER')|default(providers.vcenter.username) }}"
     password: "{{ lookup('env', 'VMWARE_PASSWORD')|default(providers.vcenter.password) }}"
-    uuid: "{{ item.instance.uuid }}"
+    uuid: "{{ item.instance.instance_uuid }}"
     state: present
     attributes:
       - name: app_name
