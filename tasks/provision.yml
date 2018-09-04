@@ -78,6 +78,7 @@
     tag_description: "{{ item.app_name }}"
     state: present
   loop: "{{ nodes }}"
+  when: item.app_name is defined
   ignore_errors: yes
 
 - name: assign role tags
@@ -91,6 +92,7 @@
     tag_description: "{{ item.role }}"
     state: present
   loop: "{{ nodes }}"
+  when: item.role is defined
   ignore_errors: yes
 
 - debug:
