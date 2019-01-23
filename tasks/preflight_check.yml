@@ -44,8 +44,3 @@
 - name: ensure ansible_port variable is defined per node (linux)
   set_fact:
     nodes: "{{ existing_nodes|default([]) + linux_nodes|default([]) + windows_nodes|default([]) }}"
-
-- debug:
-    var: nodes
-
-- pause:
