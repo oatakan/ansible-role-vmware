@@ -34,9 +34,16 @@
     - "'windows' not in template_facts.virtual_machines[item.template] | lower"
   loop: "{{ nodes }}"
 
+- name: check if any existing nodes with ansible_port defined
+  set_fact:
+    existing_nodes: "{{ existing_nodes|default([]) + [item] }}"
+  when:
+    - item.ansible_port is defined
+  loop: "{{ nodes }}"
+
 - name: ensure ansible_port variable is defined per node (linux)
   set_fact:
-    nodes: "{{ linux_nodes|default([]) + windows_nodes|default([]) }}"
+    nodes: "{{ existing_nodes|default([]) + linux_nodes|default([]) + windows_nodes|default([]) }}"
 
 - debug:
     var: nodes
