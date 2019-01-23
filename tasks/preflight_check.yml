@@ -18,13 +18,27 @@
     - template_facts.virtual_machines[item.template] is not defined
   loop: "{{ nodes }}"
 
-- name: add ansible_port variable to nodes
+- name: ensure ansible_port variable is defined per node (windows)
   set_fact:
-    new_nodes: "{{ new_nodes|default([]) + [item | combine({'ansible_port': 22})] }}"
-  when: item.ansible_port is not defined
+    windows_nodes: "{{ windows_nodes|default([]) + [item | combine({'ansible_port': 5986})] }}"
+  when:
+    - item.ansible_port is not defined
+    - "'windows' in template_facts.virtual_machines[item.template] | lower"
   loop: "{{ nodes }}"
 
+- name: ensure ansible_port variable is defined per node (linux)
+  set_fact:
+    linux_nodes: "{{ linux_nodes|default([]) + [item | combine({'ansible_port': 22})] }}"
+  when:
+    - item.ansible_port is not defined
+    - "'windows' not in template_facts.virtual_machines[item.template] | lower"
+  loop: "{{ nodes }}"
+
+- name: ensure ansible_port variable is defined per node (linux)
+  set_fact:
+    nodes: "{{ linux_nodes|default([]) + windows_nodes|default([]) }}"
+
 - debug:
-    var: new_nodes
+    var: nodes
 
 - pause:
