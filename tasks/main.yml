@@ -1,5 +1,8 @@
 ---
 
+- include_tasks: preflight_check.yml
+  when: role_action == 'provision'
+
 - include_tasks: provision.yml
   when: role_action == 'provision'
 
