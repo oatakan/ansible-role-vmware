@@ -15,7 +15,7 @@
     snapshot_src: "{{ item.snapshot_src|default(omit) }}"
     linked_clone: "{{ item.linked_clone|default(omit) }}"
     customvalues: "{{ item.customvalues|default(omit) }}"
-    state: poweredon
+    state: present
     wait_for_ip_address: yes
     disk: "{{ item.disk|default(omit) }}"
     hardware:
