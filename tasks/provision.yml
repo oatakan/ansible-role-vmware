@@ -15,7 +15,7 @@
     snapshot_src: "{{ item.snapshot_src|default(omit) }}"
     linked_clone: "{{ item.linked_clone|default(omit) }}"
     customvalues: "{{ item.customvalues|default(omit) }}"
-    state: poweredon
+    state: present
     wait_for_ip_address: yes
     disk: "{{ item.disk|default(omit) }}"
     hardware:
@@ -60,6 +60,21 @@
 - debug:
     var: item.item.item.networks[0].ip | default(item.instance.ipv4)
   loop: "{{ instances.results }}"
+
+- name: start vms
+  vmware_guest:
+    hostname: "{{ lookup('env', 'VMWARE_HOST')|default(providers.vcenter.hostname) }}"
+    username: "{{ lookup('env', 'VMWARE_USER')|default(providers.vcenter.username) }}"
+    password: "{{ lookup('env', 'VMWARE_PASSWORD')|default(providers.vcenter.password) }}"
+    validate_certs: no
+    datacenter: "{{ providers.vcenter.datacenter }}"
+    cluster: "{{ providers.vcenter.cluster }}"
+    resource_pool: "{{ providers.vcenter.resource_pool|default('') }}"
+    folder: "{{ providers.vcenter.folder|default('') }}"
+    name: "{{ item.name }}"
+    state: poweredon
+  loop: "{{ nodes }}"
+  when: nodes is defined
 
 - name: waiting for servers to come online
   wait_for:
