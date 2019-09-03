@@ -12,6 +12,7 @@
     folder: "{{ providers.vcenter.folder|default('') }}"
     name: "{{ item.name }}"
     template: "{{ item.template }}"
+    datastore: "{{ item.datastore|default(omit) }}"
     snapshot_src: "{{ item.snapshot_src|default(omit) }}"
     linked_clone: "{{ item.linked_clone|default(omit) }}"
     customvalues: "{{ item.customvalues|default(omit) }}"
