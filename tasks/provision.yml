@@ -23,6 +23,7 @@
       memory_mb: "{{ item.memory }}"
       num_cpus: "{{ item.cpu }}"
       scsi: paravirtual
+      nested_virt: "{{ item.nested_virt|default(omit) }}"
     networks: "{{ item.networks }}"
     customization: "{{ item.customization|default(omit) }}"
   async: 7200
