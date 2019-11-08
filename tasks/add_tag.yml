@@ -8,7 +8,7 @@
   register: vmware_tag_details
 
 - debug:
-    msg: "{{ vmware_tag_details.tag_facts }}"
+    msg: "{{ vmware_tag_details }}"
 
 - name: create tags
   vmware_tag:
