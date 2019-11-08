@@ -30,8 +30,8 @@
     - "{{ instances.results }}"
     - "{{ vcenter_category_info.results }}"
   when:
-    - vcenter_category_info.category_results.category_id is defined
     - item.0.instance is defined
+    - item.1.category_results.category_id
   ignore_errors: yes
 
 - name: add tags
@@ -47,6 +47,6 @@
       - "role:{{ item.item.item.role | default('') }}"
   loop: "{{ instances.results }}"
   when:
-    - vcenter_category_info.category_results.category_id is defined
     - item.instance is defined
+    - item.1.category_results.category_id
   ignore_errors: yes
