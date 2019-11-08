@@ -60,41 +60,10 @@
     - item.instance is defined
   ignore_errors: yes
 
-- name: create tags
-  vmware_tag:
-    hostname: "{{ lookup('env', 'VMWARE_HOST')|default(providers.vcenter.hostname) }}"
-    username: "{{ lookup('env', 'VMWARE_USER')|default(providers.vcenter.username) }}"
-    password: "{{ lookup('env', 'VMWARE_PASSWORD')|default(providers.vcenter.password) }}"
-    #category_id: 'urn:vmomi:InventoryServiceCategory:e785088d-6981-4b1c-9fb8-1100c3e1f742:GLOBAL'
-    tag_name: "{{ item.1 }}_{{ item.0.item.item.app_name | default('') }}"
-    tag_description: "{{ item.1 }} {{ item.0.item.item.app_name | default('') }}"
-    state: present
-  with_nested:
-    - "{{ instances.results }}"
-    - [ 'app_name', 'role' ]
+- include_tasks: add_tag.yml
   when:
     - enable_tags|bool
     - instances is defined
-    - item.0.instance is defined
-  ignore_errors: yes
-
-- name: add tags
-  vmware_tag_manager:
-    hostname: "{{ lookup('env', 'VMWARE_HOST')|default(providers.vcenter.hostname) }}"
-    username: "{{ lookup('env', 'VMWARE_USER')|default(providers.vcenter.username) }}"
-    password: "{{ lookup('env', 'VMWARE_PASSWORD')|default(providers.vcenter.password) }}"
-    object_name: "{{ item.instance.hw_name }}"
-    object_type: VirtualMachine
-    state: present
-    tag_names:
-      - "app_name_{{ item.item.item.app_name | default('') }}"
-      - "role_{{ item.item.item.role | default('') }}"
-  loop: "{{ instances.results }}"
-  when:
-    - enable_tags|bool
-    - instances is defined
-    - item.instance is defined
-  ignore_errors: yes
 
 - debug:
     var: item.item.item.networks[0].ip | default(item.instance.ipv4)
