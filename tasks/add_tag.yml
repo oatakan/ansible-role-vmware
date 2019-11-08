@@ -5,8 +5,8 @@
     hostname: "{{ lookup('env', 'VMWARE_HOST')|default(providers.vcenter.hostname) }}"
     username: "{{ lookup('env', 'VMWARE_USER')|default(providers.vcenter.username) }}"
     password: "{{ lookup('env', 'VMWARE_PASSWORD')|default(providers.vcenter.password) }}"
-    category_name: "{{ vcenter_category_name }}"
-    category_description: "{{ vcenter_category_name }}"
+    category_name: "{{ item }}"
+    category_description: "{{ item }}"
     category_cardinality: 'multiple'
     state: present
   register: vcenter_category_info
@@ -15,20 +15,20 @@
     - role
 
 - debug:
-    msg: "{{ vcenter_category_info }}"
+    msg: "{{ vcenter_category_info.results }}"
 
 - name: create tags
   vmware_tag:
     hostname: "{{ lookup('env', 'VMWARE_HOST')|default(providers.vcenter.hostname) }}"
     username: "{{ lookup('env', 'VMWARE_USER')|default(providers.vcenter.username) }}"
     password: "{{ lookup('env', 'VMWARE_PASSWORD')|default(providers.vcenter.password) }}"
-    category_id: "{{ vcenter_category_info.category_results.category_id }}"
-    tag_name: "{{ item.0.item.item[item.1] | default('') }}"
-    tag_description: "{{ item.0.item.item[item.1] | default('') }}"
+    category_id: "{{ item.1.category_results.category_id }}"
+    tag_name: "{{ item.0.item.item[item.1.item] | default('') }}"
+    tag_description: "{{ item.0.item.item[item.1.item] | default('') }}"
     state: present
   with_nested:
     - "{{ instances.results }}"
-    - [ 'app_name', 'role' ]
+    - "{{ vcenter_category_info.results }}"
   when:
     - vcenter_category_info.category_results.category_id is defined
     - item.0.instance is defined
