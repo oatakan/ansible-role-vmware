@@ -55,6 +55,25 @@
         value: "{{ item.item.item.role | default('') }}"
   loop: "{{ instances.results }}"
   when:
+    - enable_custom_attributes|bool
+    - instances is defined
+    - item.instance is defined
+  ignore_errors: yes
+
+- name: add tags
+  vmware_tag_manager:
+    hostname: "{{ lookup('env', 'VMWARE_HOST')|default(providers.vcenter.hostname) }}"
+    username: "{{ lookup('env', 'VMWARE_USER')|default(providers.vcenter.username) }}"
+    password: "{{ lookup('env', 'VMWARE_PASSWORD')|default(providers.vcenter.password) }}"
+    object_name: "{{ item.instance.hw_name }}"
+    object_type: VirtualMachine
+    state: present
+    tag_names:
+      - "app_name_{{ item.item.item.app_name | default('') }}"
+      - "role_{{ item.item.item.role | default('') }}"
+  loop: "{{ instances.results }}"
+  when:
+    - enable_tags|bool
     - instances is defined
     - item.instance is defined
   ignore_errors: yes

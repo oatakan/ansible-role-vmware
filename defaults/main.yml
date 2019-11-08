@@ -13,3 +13,6 @@ vcenter:
 ansible_port: 22
 instance_wait_retry_limit: 300
 instance_wait_connection_timeout: 400
+
+enable_custom_attributes: yes
+enable_tags: yes
