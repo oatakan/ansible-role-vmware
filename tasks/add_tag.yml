@@ -11,9 +11,6 @@
     state: present
   register: vcenter_category_info
 
-- debug:
-    msg: "{{ vcenter_category_info.category_results.category_id }}"
-
 - name: create tags
   vmware_tag:
     hostname: "{{ lookup('env', 'VMWARE_HOST')|default(providers.vcenter.hostname) }}"
