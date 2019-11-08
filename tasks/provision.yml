@@ -75,7 +75,7 @@
   when:
     - enable_tags|bool
     - instances is defined
-    - item.instance is defined
+    - item.0.instance is defined
   ignore_errors: yes
 
 - name: add tags
