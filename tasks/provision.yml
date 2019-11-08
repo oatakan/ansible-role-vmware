@@ -60,7 +60,7 @@
     - item.instance is defined
   ignore_errors: yes
 
-- include_tasks: add_tag.yml
+- include_tasks: add_tags.yml
   when:
     - enable_tags|bool
     - instances is defined
