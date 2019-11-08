@@ -12,29 +12,14 @@
   register: vcenter_category_info
 
 - debug:
-    msg: "{{ vcenter_category_info }}"
-
-#- name: gather category info
-#  vmware_category_info:
-#    hostname: "{{ lookup('env', 'VMWARE_HOST')|default(providers.vcenter.hostname) }}"
-#    username: "{{ lookup('env', 'VMWARE_USER')|default(providers.vcenter.username) }}"
-#    password: "{{ lookup('env', 'VMWARE_PASSWORD')|default(providers.vcenter.password) }}"
-#  register: tag_category_results
-#
-#- set_fact:
-#    category_id: "{{ item.category_id }}"
-#  loop: "{{ tag_category_results.tag_category_info|json_query(query) }}"
-#  vars:
-#    query: "[?category_name==`{{ vcenter_category_name }}`]"
-#
-#- debug: var=category_id
+    msg: "{{ vcenter_category_info.category_results.category_id }}"
 
 - name: create tags
   vmware_tag:
     hostname: "{{ lookup('env', 'VMWARE_HOST')|default(providers.vcenter.hostname) }}"
     username: "{{ lookup('env', 'VMWARE_USER')|default(providers.vcenter.username) }}"
     password: "{{ lookup('env', 'VMWARE_PASSWORD')|default(providers.vcenter.password) }}"
-    category_id: "{{ category_id }}"
+    category_id: "{{ vcenter_category_info.category_results.category_id }}"
     tag_name: "{{ item.1 }}_{{ item.0.item.item.app_name | default('') }}"
     tag_description: "{{ item.1 }} {{ item.0.item.item.app_name | default('') }}"
     state: present
@@ -42,7 +27,7 @@
     - "{{ instances.results }}"
     - [ 'app_name', 'role' ]
   when:
-    - category_id is defined
+    - vcenter_category_info.category_results.category_id is defined
     - item.0.instance is defined
   ignore_errors: yes
 
@@ -59,6 +44,6 @@
       - "role_{{ item.item.item.role | default('') }}"
   loop: "{{ instances.results }}"
   when:
-    - category_id is defined
+    - vcenter_category_info.category_results.category_id is defined
     - item.instance is defined
   ignore_errors: yes
