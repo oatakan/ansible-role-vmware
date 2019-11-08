@@ -6,16 +6,13 @@
     username: "{{ lookup('env', 'VMWARE_USER')|default(providers.vcenter.username) }}"
     password: "{{ lookup('env', 'VMWARE_PASSWORD')|default(providers.vcenter.password) }}"
     category_name: "{{ item }}"
-    category_description: "{{ item }}"
+    category_description: ""
     category_cardinality: 'multiple'
     state: present
   register: vcenter_category_info
   loop:
     - app_name
     - role
-
-- debug:
-    msg: "{{ vcenter_category_info.results }}"
 
 - name: create tags
   vmware_tag:
