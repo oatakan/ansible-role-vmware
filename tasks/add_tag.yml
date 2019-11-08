@@ -1,46 +1,49 @@
 ---
 
-- name: Gather category id from given tag category
-  vmware_category_info:
+- name: ensure category exists
+  vmware_category:
     hostname: "{{ lookup('env', 'VMWARE_HOST')|default(providers.vcenter.hostname) }}"
     username: "{{ lookup('env', 'VMWARE_USER')|default(providers.vcenter.username) }}"
     password: "{{ lookup('env', 'VMWARE_PASSWORD')|default(providers.vcenter.password) }}"
-  delegate_to: localhost
-  register: tag_category_results
+    category_name: "{{ vcenter_category_name }}"
+    category_description: "{{ vcenter_category_name }}"
+    category_cardinality: 'multiple'
+    state: present
+  register: vcenter_category_info
 
 - debug:
-    msg: "{{ tag_category_results }}"
+    msg: "{{ vcenter_category_info }}"
 
-- set_fact:
-    category_id: "{{ item.category_id }}"
-  loop: "{{ tag_category_results.tag_category_info|json_query(query) }}"
-  vars:
-    query: "[?category_name==`INFRA`]"
-- debug: var=category_id
-
-- name: get tag category names
-  vmware_tag_info:
-    hostname: "{{ lookup('env', 'VMWARE_HOST')|default(providers.vcenter.hostname) }}"
-    username: "{{ lookup('env', 'VMWARE_USER')|default(providers.vcenter.username) }}"
-    password: "{{ lookup('env', 'VMWARE_PASSWORD')|default(providers.vcenter.password) }}"
-  register: vmware_tag_details
-
-- debug:
-    msg: "{{ vmware_tag_details }}"
+#- name: gather category info
+#  vmware_category_info:
+#    hostname: "{{ lookup('env', 'VMWARE_HOST')|default(providers.vcenter.hostname) }}"
+#    username: "{{ lookup('env', 'VMWARE_USER')|default(providers.vcenter.username) }}"
+#    password: "{{ lookup('env', 'VMWARE_PASSWORD')|default(providers.vcenter.password) }}"
+#  register: tag_category_results
+#
+#- set_fact:
+#    category_id: "{{ item.category_id }}"
+#  loop: "{{ tag_category_results.tag_category_info|json_query(query) }}"
+#  vars:
+#    query: "[?category_name==`{{ vcenter_category_name }}`]"
+#
+#- debug: var=category_id
 
 - name: create tags
   vmware_tag:
     hostname: "{{ lookup('env', 'VMWARE_HOST')|default(providers.vcenter.hostname) }}"
     username: "{{ lookup('env', 'VMWARE_USER')|default(providers.vcenter.username) }}"
     password: "{{ lookup('env', 'VMWARE_PASSWORD')|default(providers.vcenter.password) }}"
-    #category_id: 'urn:vmomi:InventoryServiceCategory:e785088d-6981-4b1c-9fb8-1100c3e1f742:GLOBAL'
+    category_id: "{{ category_id }}"
     tag_name: "{{ item.1 }}_{{ item.0.item.item.app_name | default('') }}"
     tag_description: "{{ item.1 }} {{ item.0.item.item.app_name | default('') }}"
     state: present
   with_nested:
     - "{{ instances.results }}"
     - [ 'app_name', 'role' ]
-  when: item.0.instance is defined
+  when:
+    - category_id is defined
+    - item.0.instance is defined
   ignore_errors: yes
 
 - name: add tags
@@ -55,5 +58,7 @@
       - "app_name_{{ item.item.item.app_name | default('') }}"
       - "role_{{ item.item.item.role | default('') }}"
   loop: "{{ instances.results }}"
-  when: item.instance is defined
+  when:
+    - category_id is defined
+    - item.instance is defined
   ignore_errors: yes

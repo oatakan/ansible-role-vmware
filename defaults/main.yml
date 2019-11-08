@@ -16,3 +16,4 @@ instance_wait_connection_timeout: 400
 
 enable_custom_attributes: yes
 enable_tags: yes
+vcenter_category_name: INFRA
