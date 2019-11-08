@@ -1,5 +1,23 @@
 ---
 
+- name: Gather category id from given tag category
+  vmware_category_info:
+    hostname: "{{ vcenter_hostname }}"
+    username: "{{ vcenter_username }}"
+    password: "{{ vcenter_password }}"
+  delegate_to: localhost
+  register: tag_category_results
+
+- debug:
+    msg: "{{ tag_category_results }}"
+
+- set_fact:
+    category_id: "{{ item.category_id }}"
+  loop: "{{ tag_category_results.tag_category_info|json_query(query) }}"
+  vars:
+    query: "[?category_name==`INFRA`]"
+- debug: var=category_id
+
 - name: get tag category names
   vmware_tag_info:
     hostname: "{{ lookup('env', 'VMWARE_HOST')|default(providers.vcenter.hostname) }}"
