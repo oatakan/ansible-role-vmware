@@ -48,5 +48,4 @@
   loop: "{{ instances.results }}"
   when:
     - item.instance is defined
-    - item.1.category_results.category_id
   ignore_errors: yes
