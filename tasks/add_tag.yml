@@ -10,6 +10,12 @@
     category_cardinality: 'multiple'
     state: present
   register: vcenter_category_info
+  loop:
+    - app_name
+    - role
+
+- debug:
+    msg: "{{ vcenter_category_info }}"
 
 - name: create tags
   vmware_tag:
@@ -17,8 +23,8 @@
     username: "{{ lookup('env', 'VMWARE_USER')|default(providers.vcenter.username) }}"
     password: "{{ lookup('env', 'VMWARE_PASSWORD')|default(providers.vcenter.password) }}"
     category_id: "{{ vcenter_category_info.category_results.category_id }}"
-    tag_name: "{{ item.1 }}_{{ item.0.item.item[item.1] | default('') }}"
-    tag_description: "{{ item.1 }} {{ item.0.item.item[item.1] | default('') }}"
+    tag_name: "{{ item.0.item.item[item.1] | default('') }}"
+    tag_description: "{{ item.0.item.item[item.1] | default('') }}"
     state: present
   with_nested:
     - "{{ instances.results }}"
@@ -37,8 +43,8 @@
     object_type: VirtualMachine
     state: present
     tag_names:
-      - "app_name_{{ item.item.item.app_name | default('') }}"
-      - "role_{{ item.item.item.role | default('') }}"
+      - "app_name:{{ item.item.item.app_name | default('') }}"
+      - "role:{{ item.item.item.role | default('') }}"
   loop: "{{ instances.results }}"
   when:
     - vcenter_category_info.category_results.category_id is defined
