@@ -21,7 +21,7 @@
     password: "{{ lookup('env', 'VMWARE_PASSWORD')|default(providers.vcenter.password) }}"
     category_id: "{{ item.1.category_results.category_id }}"
     tag_name: "{{ item.0.item.item[item.1.item] | default('') }}"
-    tag_description: "{{ item.0.item.item[item.1.item] | default('') }}"
+    tag_description: ""
     state: present
   with_nested:
     - "{{ instances.results }}"
