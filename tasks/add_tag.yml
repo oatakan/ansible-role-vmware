@@ -2,9 +2,9 @@
 
 - name: Gather category id from given tag category
   vmware_category_info:
-    hostname: "{{ vcenter_hostname }}"
-    username: "{{ vcenter_username }}"
-    password: "{{ vcenter_password }}"
+    hostname: "{{ lookup('env', 'VMWARE_HOST')|default(providers.vcenter.hostname) }}"
+    username: "{{ lookup('env', 'VMWARE_USER')|default(providers.vcenter.username) }}"
+    password: "{{ lookup('env', 'VMWARE_PASSWORD')|default(providers.vcenter.password) }}"
   delegate_to: localhost
   register: tag_category_results
 
