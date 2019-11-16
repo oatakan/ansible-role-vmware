@@ -1,0 +1,35 @@
+---
+
+- fail:
+    msg: "Template not found on vcenter: {{ item.template }}"
+  when:
+    - template_facts is success
+    - template_facts.virtual_machines is defined
+    - item.template is defined
+    - template_facts.virtual_machines[item.template] is not defined
+  loop: "{{ nodes }}"
+
+- name: ensure ansible_port variable is defined per node (windows)
+  set_fact:
+    windows_nodes: "{{ windows_nodes|default([]) + [item | combine({'ansible_port': 5986})] }}"
+  when:
+    - item.ansible_port is not defined
+    - template_facts.virtual_machines[item.template].guest_fullname is defined
+    - "'windows' in template_facts.virtual_machines[item.template].guest_fullname | lower"
+  loop: "{{ nodes }}"
+
+- name: ensure ansible_port variable is defined per node (linux)
+  set_fact:
+    linux_nodes: "{{ linux_nodes|default([]) + [item | combine({'ansible_port': 22})] }}"
+  when:
+    - item.ansible_port is not defined
+    - template_facts.virtual_machines[item.template].guest_fullname is defined
+    - "'windows' not in template_facts.virtual_machines[item.template].guest_fullname | lower"
+  loop: "{{ nodes }}"
+
+- name: check if any existing nodes with ansible_port defined
+  set_fact:
+    existing_nodes: "{{ existing_nodes|default([]) + [item] }}"
+  when:
+    - item.ansible_port is defined or template_facts.virtual_machines[item.template].guest_fullname is not defined
+  loop: "{{ nodes }}"
