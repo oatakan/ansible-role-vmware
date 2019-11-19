@@ -42,8 +42,8 @@
     username: "{{ lookup('env', 'VMWARE_USER') }}"
     password: "{{ lookup('env', 'VMWARE_PASSWORD') }}"
     validate_certs: no
-    name: "{{ inventory_hostname }}"
-    uuid: "{{ hostvars[inventory_hostname].config.uuid }}"
+    name: "{{ item }}"
+    uuid: "{{ hostvars[item].config.uuid }}"
     state: absent
   async: 7200
   poll: 0
