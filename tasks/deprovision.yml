@@ -6,14 +6,35 @@
     username: "{{ lookup('env', 'VMWARE_USER') }}"
     password: "{{ lookup('env', 'VMWARE_PASSWORD') }}"
     validate_certs: no
-    name: "{{ inventory_hostname }}"
-    uuid: "{{ hostvars[inventory_hostname].config.uuid }}"
+    name: "{{ item }}"
+    uuid: "{{ hostvars[item].config.uuid }}"
     state: poweredoff
-  loop: "{{ nodes }}"
+  async: 7200
+  poll: 0
+  register: vms_poweroff
+  loop: "{{ ansible_play_hosts }}"
   when:
     - nodes is defined
-    - hostvars[inventory_hostname].config.uuid is defined
-    - hostvars[inventory_hostname].config.name == item.name
+    - hostvars[item].config.uuid is defined
+    - hostvars[item].config.name is defined
+    - (nodes | json_query(query)) | length > 0
+  vars:
+    query: "@[?name==`{{ hostvars[item].config.name }}`]"
+
+- name: wait for vms to be poweredoff
+  async_status:
+    jid: "{{ item.ansible_job_id }}"
+  register: vm_poweroff
+  until:
+    - vm_poweroff.finished is defined
+    - vm_poweroff.finished == 0
+  retries: "{{ instance_wait_retry_limit }}"
+  delay: 10
+  loop: "{{ vms_poweroff.results }}"
+  when:
+    - nodes is defined
+    - vms_poweroff.results is defined
+    - item.ansible_job_id is defined
 
 - name: delete vm
   vmware_guest:
@@ -24,8 +45,29 @@
     name: "{{ inventory_hostname }}"
     uuid: "{{ hostvars[inventory_hostname].config.uuid }}"
     state: absent
-  loop: "{{ nodes }}"
+  async: 7200
+  poll: 0
+  register: vms_remove
+  loop: "{{ ansible_play_hosts }}"
   when:
     - nodes is defined
-    - hostvars[inventory_hostname].config.uuid is defined
-    - hostvars[inventory_hostname].config.name == item.name
+    - hostvars[item].config.uuid is defined
+    - hostvars[item].config.name is defined
+    - (nodes | json_query(query)) | length > 0
+  vars:
+    query: "@[?name==`{{ hostvars[item].config.name }}`]"
+
+- name: wait for vms to be deleted
+  async_status:
+    jid: "{{ item.ansible_job_id }}"
+  register: vm_remove
+  until:
+    - vm_remove.finished is defined
+    - vm_remove.finished == 0
+  retries: "{{ instance_wait_retry_limit }}"
+  delay: 10
+  loop: "{{ vms_remove.results }}"
+  when:
+    - nodes is defined
+    - vms_remove.results is defined
+    - item.ansible_job_id is defined
