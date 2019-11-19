@@ -25,9 +25,7 @@
   async_status:
     jid: "{{ item.ansible_job_id }}"
   register: vm_poweroff
-  until:
-    - vm_poweroff.finished is defined
-    - vm_poweroff.finished == 0
+  until: vm_poweroff.finished
   retries: "{{ instance_wait_retry_limit }}"
   delay: 10
   loop: "{{ vms_poweroff.results }}"
@@ -61,9 +59,7 @@
   async_status:
     jid: "{{ item.ansible_job_id }}"
   register: vm_remove
-  until:
-    - vm_remove.finished is defined
-    - vm_remove.finished == 0
+  until: vm_remove.finished
   retries: "{{ instance_wait_retry_limit }}"
   delay: 10
   loop: "{{ undeploy.results }}"
