@@ -1,9 +1,11 @@
 ---
 
 - include_tasks: preflight_check.yml
+  run_once: yes
   when: role_action == 'provision'
 
 - include_tasks: provision.yml
+  run_once: yes
   when: role_action == 'provision'
 
 - include_tasks: deprovision.yml
