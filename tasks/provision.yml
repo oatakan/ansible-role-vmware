@@ -67,7 +67,7 @@
     - instances is defined
 
 - debug:
-    var: item.item.item.networks[0].ip | default(item.instance.ipv4)
+    msg: "{{ item.item.item.networks[0].ip | default(item.instance.ipv4) }}"
   loop: "{{ instances.results }}"
 
 - name: waiting for servers to come online
