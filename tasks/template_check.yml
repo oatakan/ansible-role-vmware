@@ -1,13 +1,59 @@
 ---
 
-- fail:
-    msg: "Template not found on vcenter: {{ item.template }}"
+- name: fail if no template and disk specified
+  fail:
+    msg: "{{ at least one disk must be specified when no template is used }}"
+  when:
+    - item.template is undefined
+    - item.disks[0].size is undefined | default(False)
+
+- name: fail if both template and iso is specified
+  fail:
+    msg: "template and cdrom are mutually exclusive, only define one of them"
+  when:
+    - item.template is defined
+    - item.cdrom is defined
+
+- name: fail with message
+  fail:
+    msg: "template ({{ item.template }}) could not be found, make sure it exists"
   when:
     - template_facts is success
     - template_facts.virtual_machines is defined
     - item.template is defined
     - item.template not in (template_facts.virtual_machines | map(attribute='guest_name') | list)
-  loop: "{{ nodes }}"
+
+- block:
+    - name: check iso file on data domain
+      vsphere_file:
+        hostname: "{{ lookup('env', 'VMWARE_HOST')|default(providers.vcenter.hostname) }}"
+        username: "{{ lookup('env', 'VMWARE_USER')|default(providers.vcenter.username) }}"
+        password: "{{ lookup('env', 'VMWARE_PASSWORD')|default(providers.vcenter.password) }}"
+        validate_certs: no
+        datacenter: "{{ providers.vcenter.datacenter | default('datastore1') }}"
+        datastore: "{{ providers.vcenter.datastore | default('datastore1') }}"
+        path: "{{ datastore_iso_folder }}"
+        state: touch
+      register: vmware_disk_main_iso
+      failed_when: no
+
+    - debug:
+        msg: "{{ vmware_disk_main_iso }}"
+
+    - name: fail with message
+      fail:
+        msg: "iso file ({{ node.cdrom }}) could not be found on datastore ({{ providers.vcenter.datastore | default('datastore1') }})"
+      when: vmware_disk_main_iso is undefined
+  when: node.cdrom is defined
+
+- name: set iso file
+  set_fact:
+    node_iso_file: '{{ node_iso_file | default({}) | combine({node.name: node.cdrom | default(None)}) }}'
+  when: (node_iso_file[node.name] | default(None)) is undefined
+
+- name: set os type
+  set_fact:
+    nodes_os_type: '{{ nodes_os_type | default({}) | combine({node.name: node.os_type | default(None)}) }}'
 
 - name: ensure ansible_port variable is defined per node (windows)
   set_fact:
@@ -16,7 +62,6 @@
     - item.ansible_port is not defined
     - (template_facts.virtual_machines | selectattr('guest_name', 'match', item.template) | list | first).guest_fullname is defined
     - "'windows' in (template_facts.virtual_machines | selectattr('guest_name', 'match', item.template) | list | first).guest_fullname | lower"
-  loop: "{{ nodes }}"
 
 - name: ensure ansible_port variable is defined per node (linux)
   set_fact:
@@ -25,11 +70,9 @@
     - item.ansible_port is not defined
     - (template_facts.virtual_machines | selectattr('guest_name', 'match', item.template) | list | first).guest_fullname is defined
     - "'windows' not in (template_facts.virtual_machines | selectattr('guest_name', 'match', item.template) | list | first).guest_fullname | lower"
-  loop: "{{ nodes }}"
 
 - name: check if any existing nodes with ansible_port defined
   set_fact:
     existing_nodes: "{{ existing_nodes|default([]) + [item] }}"
   when:
     - item.ansible_port is defined or (template_facts.virtual_machines | selectattr('guest_name', 'match', item.template) | list | first).guest_fullname is not defined
-  loop: "{{ nodes }}"
