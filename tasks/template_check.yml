@@ -42,18 +42,18 @@
 
     - name: fail with message
       fail:
-        msg: "iso file ({{ node.cdrom }}) could not be found on datastore ({{ providers.vcenter.datastore | default('datastore1') }})"
+        msg: "iso file ({{ item.cdrom }}) could not be found on datastore ({{ providers.vcenter.datastore | default('datastore1') }})"
       when: vmware_disk_main_iso is undefined
-  when: node.cdrom is defined
+  when: item.cdrom is defined
 
 - name: set iso file
   set_fact:
-    node_iso_file: '{{ node_iso_file | default({}) | combine({node.name: node.cdrom | default(None)}) }}'
-  when: (node_iso_file[node.name] | default(None)) is undefined
+    node_iso_file: '{{ node_iso_file | default({}) | combine({item.name: item.cdrom | default(None)}) }}'
+  when: (node_iso_file[item.name] | default(None)) is undefined
 
 - name: set os type
   set_fact:
-    nodes_os_type: '{{ nodes_os_type | default({}) | combine({node.name: node.os_type | default(None)}) }}'
+    nodes_os_type: '{{ nodes_os_type | default({}) | combine({item.name: item.os_type | default(None)}) }}'
 
 - name: ensure ansible_port variable is defined per node (windows)
   set_fact:
