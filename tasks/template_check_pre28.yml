@@ -61,7 +61,7 @@
   when:
     - item.template is defined
     - item.ansible_port is not defined
-    - (template_facts.virtual_machines[item.template].guest_fullname | default(None)) is defined
+    - (template_facts.virtual_machines[item.template | default('')].guest_fullname | default(None)) is defined
     - "'windows' in template_facts.virtual_machines[item.template].guest_fullname | lower | default('')"
 
 - name: ensure ansible_port variable is defined per node (linux)
@@ -70,11 +70,11 @@
   when:
     - item.template is defined
     - item.ansible_port is not defined
-    - (template_facts.virtual_machines[item.template].guest_fullname | default(None)) is defined
+    - (template_facts.virtual_machines[item.template | default('')].guest_fullname | default(None)) is defined
     - "'windows' not in template_facts.virtual_machines[item.template].guest_fullname | lower | default('')"
 
 - name: check if any existing nodes with ansible_port defined
   set_fact:
     existing_nodes: "{{ existing_nodes|default([]) + [item] }}"
   when:
-    - item.ansible_port is defined or item.template is undefined or (template_facts.virtual_machines[item.template].guest_fullname | default(None)) is undefined
+    - item.ansible_port is defined or item.template is undefined or (template_facts.virtual_machines[item.template | default('')].guest_fullname | default(None)) is undefined
