@@ -11,7 +11,7 @@
     resource_pool: "{{ providers.vcenter.resource_pool|default('') }}"
     folder: "{{ providers.vcenter.folder|default('') }}"
     name: "{{ item.name }}"
-    template: "{{ item.template }}"
+    template: "{{ item.template|default(omit) }}"
     datastore: "{{ item.datastore|default(omit) }}"
     snapshot_src: "{{ item.snapshot_src|default(omit) }}"
     linked_clone: "{{ item.linked_clone|default(omit) }}"
