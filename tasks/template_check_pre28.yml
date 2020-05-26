@@ -59,6 +59,7 @@
   set_fact:
     windows_nodes: "{{ windows_nodes|default([]) + [item | combine({'ansible_port': 5986})] }}"
   when:
+    - item.template is defined
     - item.ansible_port is not defined
     - (template_facts.virtual_machines[item.template].guest_fullname | default(None)) is defined
     - "'windows' in template_facts.virtual_machines[item.template].guest_fullname | lower | default('')"
@@ -67,6 +68,7 @@
   set_fact:
     linux_nodes: "{{ linux_nodes|default([]) + [item | combine({'ansible_port': 22})] }}"
   when:
+    - item.template is defined
     - item.ansible_port is not defined
     - (template_facts.virtual_machines[item.template].guest_fullname | default(None)) is defined
     - "'windows' not in template_facts.virtual_machines[item.template].guest_fullname | lower | default('')"
@@ -75,4 +77,4 @@
   set_fact:
     existing_nodes: "{{ existing_nodes|default([]) + [item] }}"
   when:
-    - item.ansible_port is defined or (template_facts.virtual_machines[item.template].guest_fullname | default(None)) is undefined
+    - item.ansible_port is defined or item.template is undefined or (template_facts.virtual_machines[item.template].guest_fullname | default(None)) is undefined
