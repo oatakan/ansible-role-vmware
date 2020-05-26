@@ -60,7 +60,7 @@
     windows_nodes: "{{ windows_nodes|default([]) + [item | combine({'ansible_port': 5986})] }}"
   when:
     - item.ansible_port is not defined
-    - template_facts.virtual_machines[item.template].guest_fullname is defined
+    - (template_facts.virtual_machines[item.template].guest_fullname | default(None)) is defined
     - "'windows' in template_facts.virtual_machines[item.template].guest_fullname | lower | default('')"
 
 - name: ensure ansible_port variable is defined per node (linux)
@@ -68,7 +68,7 @@
     linux_nodes: "{{ linux_nodes|default([]) + [item | combine({'ansible_port': 22})] }}"
   when:
     - item.ansible_port is not defined
-    - template_facts.virtual_machines[item.template].guest_fullname is defined
+    - (template_facts.virtual_machines[item.template].guest_fullname | default(None)) is defined
     - "'windows' not in template_facts.virtual_machines[item.template].guest_fullname | lower | default('')"
 
 - name: check if any existing nodes with ansible_port defined
