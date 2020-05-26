@@ -2,7 +2,7 @@
 
 - name: fail if no template and disk specified
   fail:
-    msg: "{{ at least one disk must be specified when no template is used }}"
+    msg: "at least one disk must be specified when no template is used"
   when:
     - item.template is undefined
     - item.disks[0].size is undefined | default(False)
