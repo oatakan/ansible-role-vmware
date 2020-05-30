@@ -26,6 +26,7 @@
       num_cpus: "{{ item.cpu }}"
       scsi: paravirtual
       nested_virt: "{{ item.nested_virt|default(omit) }}"
+      boot_firmware: "{{ item.boot_firmware | default('bios') }}"
     networks: "{{ item.networks }}"
     customization: "{{ item.customization|default(omit) }}"
   async: 7200
