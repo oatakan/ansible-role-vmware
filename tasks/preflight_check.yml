@@ -1,18 +1,18 @@
 ---
 
-- include_tasks: template_facts_pre29.yml
-  when: ansible_version.full is version('2.9', '<')
+#- include_tasks: template_facts_pre29.yml
+#  when: ansible_version.full is version('2.9', '<')
 
 - include_tasks: template_facts.yml
-  when: ansible_version.full is version('2.9', '>=')
+#  when: ansible_version.full is version('2.9', '>=')
 
-- include_tasks: template_check_pre28.yml
-  loop: "{{ nodes }}"
-  when: ansible_version.full is version('2.8', '<')
+#- include_tasks: template_check_pre28.yml
+#  loop: "{{ nodes }}"
+#  when: ansible_version.full is version('2.8', '<')
 
 - include_tasks: template_check.yml
   loop: "{{ nodes }}"
-  when: ansible_version.full is version('2.8', '>=')
+#  when: ansible_version.full is version('2.8', '>=')
 
 - name: ensure ansible_port variable is defined per node
   set_fact:
