@@ -39,7 +39,7 @@
     username: "{{ lookup('env', 'VMWARE_USER')|default(providers.vcenter.username) }}"
     password: "{{ lookup('env', 'VMWARE_PASSWORD')|default(providers.vcenter.password) }}"
     validate_certs: no
-    object_name: "{{ item.instance.hw_name }}"
+    object_name: "{{ item.item.item.name | default(item.instance.hw_name) }}"
     object_type: VirtualMachine
     state: present
     tag_names:
