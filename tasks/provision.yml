@@ -53,6 +53,8 @@
     name: "{{ item.item.item.name | default(item.instance.hw_name) }}"
     state: present
     attributes:
+      - name: environment
+        value: "{{ item.item.item.environment | default('') }}"
       - name: app_name
         value: "{{ item.item.item.app_name | default('') }}"
       - name: role

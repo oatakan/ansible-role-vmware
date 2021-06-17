@@ -12,6 +12,7 @@
     state: present
   register: vcenter_category_info
   loop:
+    - environment
     - app_name
     - role
 
@@ -43,6 +44,7 @@
     object_type: VirtualMachine
     state: present
     tag_names:
+      - "environment:{{ item.item.item.environment | default('') }}"
       - "app_name:{{ item.item.item.app_name | default('') }}"
       - "role:{{ item.item.item.role | default('') }}"
   loop: "{{ instances.results }}"
