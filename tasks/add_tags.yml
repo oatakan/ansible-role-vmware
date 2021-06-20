@@ -44,7 +44,7 @@
     object_type: VirtualMachine
     state: present
     tag_names:
-      - "environment:{{ item.item.item.environment | default('') }}"
+      - "environment:{{ item.item.item.environment | default('dev') }}"
       - "app_name:{{ item.item.item.app_name | default('') }}"
       - "role:{{ item.item.item.role | default('') }}"
   loop: "{{ instances.results }}"

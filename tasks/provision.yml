@@ -54,7 +54,7 @@
     state: present
     attributes:
       - name: environment
-        value: "{{ item.item.item.environment | default('') }}"
+        value: "{{ item.item.item.environment | default('dev') }}"
       - name: app_name
         value: "{{ item.item.item.app_name | default('') }}"
       - name: role
