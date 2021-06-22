@@ -71,17 +71,30 @@
     - enable_tags|bool
     - instances is defined
 
+- name: obtain guest ip address
+  vmware_guest_info:
+    hostname: "{{ lookup('env', 'VMWARE_HOST')|default(providers.vcenter.hostname) }}"
+    username: "{{ lookup('env', 'VMWARE_USER')|default(providers.vcenter.username) }}"
+    password: "{{ lookup('env', 'VMWARE_PASSWORD')|default(providers.vcenter.password) }}"
+    validate_certs: no
+    datacenter: "{{ providers.vcenter.datacenter }}"
+    name: "{{ item.name }}"
+    schema: "vsphere"
+    properties: [ "guest.ipAddress" ]
+  loop: "{{ nodes }}"
+  register: guest_ip_address
+
 - debug:
-    msg: "{{ item.item.item.networks[0].ip | default(item.instance.ipv4) }}"
-  loop: "{{ instances.results }}"
+    msg: "{{ item.item.networks[0].ip | default(item.instance.guest.ipAddress) }}"
+  loop: "{{ guest_ip_address.results }}"
 
 - name: waiting for servers to come online
   wait_for:
-    host: "{{ item.item.item.networks[0].ip | default(item.instance.ipv4) }}"
-    port: "{{ item.item.item.ansible_port | default(ansible_port) | default('22') }}"
+    host: "{{ item.item.networks[0].ip | default(item.instance.guest.ipAddress) }}"
+    port: "{{ item.item.ansible_port | default(ansible_port) | default('22') }}"
     timeout: "{{ instance_wait_connection_timeout }}"
-  loop: "{{ instances.results }}"
+  loop: "{{ guest_ip_address.results }}"
   when:
-    - instances is defined
+    - guest_ip_address is defined
     - item.instance is defined
   ignore_errors: yes
