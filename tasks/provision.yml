@@ -27,7 +27,7 @@
       scsi: paravirtual
       nested_virt: "{{ item.nested_virt|default(omit) }}"
       boot_firmware: "{{ item.boot_firmware|default(omit) }}"
-    networks: "{{ item.networks }}"
+    networks: "{{ item.networks|default(omit) }}"
     customization: "{{ item.customization|default(omit) }}"
   async: 7200
   poll: 0
