@@ -81,6 +81,9 @@
     name: "{{ item.name }}"
     schema: "vsphere"
     properties: [ "guest.ipAddress" ]
+  until: guest_ip_address.instance.guest.ipAddress is defined
+  retries: "{{ ip_wait_retry_limit }}"
+  delay: 10
   loop: "{{ nodes }}"
   register: guest_ip_address
 
