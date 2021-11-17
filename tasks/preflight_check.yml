@@ -1,9 +1,4 @@
 ---
-# this seems to be needed as ansible_password is not passed into the loop
-- name: set ansible password
-  set_fact:
-    ansible_password: "{{ ansible_password | default('') }}"
-  no_log: true
 
 #- include_tasks: template_facts_pre29.yml
 #  when: ansible_version.full is version('2.9', '<')
