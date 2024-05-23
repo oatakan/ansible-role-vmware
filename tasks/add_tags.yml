@@ -16,14 +16,14 @@
     - app_name
     - role
 
-- name: create tags
+- name: ensure tag names exists
   vmware_tag:
     hostname: "{{ lookup('env', 'VMWARE_HOST')|default(providers.vcenter.hostname) }}"
     username: "{{ lookup('env', 'VMWARE_USER')|default(providers.vcenter.username) }}"
     password: "{{ lookup('env', 'VMWARE_PASSWORD')|default(providers.vcenter.password) }}"
     validate_certs: no
-    category_id: "{{ item.1.category_results.category_id }}"
-    tag_name: "{{ item.0.item.item[item.1.item] | default('') }}"
+    category_id: "{{ _category_id }}"
+    tag_name: "{{ _tag_name }}"
     tag_description: ""
     state: present
   with_nested:
@@ -31,10 +31,16 @@
     - "{{ vcenter_category_info.results }}"
   when:
     - item.0.instance is defined
-    - item.1.category_results.category_id
+    - _category_id is defined
+    - _category_id | length
+    - _tag_name | length
+  vars:
+    _category_id: "{{ item.1.category_results.category_id }}"
+    _category_name: "{{ item.1.item }}"
+    _tag_name: "{{ item.0.item.item[_category_name] | default('') }}"
   ignore_errors: yes
 
-- name: add tags
+- name: ensure tags are attached
   vmware_tag_manager:
     hostname: "{{ lookup('env', 'VMWARE_HOST')|default(providers.vcenter.hostname) }}"
     username: "{{ lookup('env', 'VMWARE_USER')|default(providers.vcenter.username) }}"
@@ -44,9 +50,12 @@
     object_type: VirtualMachine
     state: present
     tag_names:
-      - "environment:{{ item.item.item.environment | default('dev') }}"
-      - "app_name:{{ item.item.item.app_name | default('') }}"
-      - "role:{{ item.item.item.role | default('') }}"
+      - tag: "{{ item.item.item.environment | default('dev') }}"
+        category: environment
+      - tag: "{{ item.item.item.app_name | default('no_app_specified') }}"
+        category: app_name
+      - tag: "{{ item.item.item.role | default('no_role_specified') }}"
+        category: role
   loop: "{{ instances.results }}"
   when:
     - item.instance is defined
