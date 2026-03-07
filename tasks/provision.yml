@@ -91,7 +91,9 @@
 - debug:
     msg: "{{ item.item.networks[0].ip | default(item.instance.guest.ipAddress) }}"
   loop: "{{ guest_ip_address.results }}"
-  when: guest_ip_address is defined
+  when:
+    - guest_ip_address is defined
+    - item.instance is defined
 
 - name: waiting for servers to come online
   wait_for:
