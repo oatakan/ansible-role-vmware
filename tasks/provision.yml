@@ -19,7 +19,7 @@
     guest_id: "{{ item.guest_id|default(omit) }}"
     customvalues: "{{ item.customvalues|default(omit) }}"
     state: poweredon
-    wait_for_ip_address: yes
+    wait_for_ip_address: "{{ item.wait_for_ip_address|default(true) }}"
     disk: "{{ item.disk|default(omit) }}"
     hardware:
       memory_mb: "{{ item.memory }}"
