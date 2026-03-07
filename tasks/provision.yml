@@ -86,10 +86,12 @@
   delay: 10
   loop: "{{ nodes }}"
   register: guest_ip_address
+  when: item.wait_for_ip_address|default(true)
 
 - debug:
     msg: "{{ item.item.networks[0].ip | default(item.instance.guest.ipAddress) }}"
   loop: "{{ guest_ip_address.results }}"
+  when: guest_ip_address is defined
 
 - name: waiting for servers to come online
   wait_for:
@@ -100,4 +102,5 @@
   when:
     - guest_ip_address is defined
     - item.instance is defined
+    - item.wait_for_ip_address|default(true)
   ignore_errors: yes
