@@ -24,7 +24,7 @@
     hardware:
       memory_mb: "{{ item.memory }}"
       num_cpus: "{{ item.cpu }}"
-      scsi: paravirtual
+      scsi: "{{ item.scsi|default('paravirtual') }}"
       nested_virt: "{{ item.nested_virt|default(omit) }}"
       boot_firmware: "{{ item.boot_firmware|default(omit) }}"
     networks: "{{ item.networks|default(omit) }}"
