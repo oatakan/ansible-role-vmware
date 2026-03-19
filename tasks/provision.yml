@@ -18,8 +18,8 @@
     cdrom: "{{ node_iso_file[item.name]|default(omit) }}"
     guest_id: "{{ item.guest_id|default(omit) }}"
     customvalues: "{{ item.customvalues|default(omit) }}"
-    state: poweredon
-    wait_for_ip_address: "{{ item.wait_for_ip_address|default(true) }}"
+    state: "{{ 'poweredoff' if item.boot_order is defined else 'poweredon' }}"
+    wait_for_ip_address: "{{ item.wait_for_ip_address|default(true) if item.boot_order is not defined else omit }}"
     disk: "{{ item.disk|default(omit) }}"
     hardware:
       memory_mb: "{{ item.memory }}"
@@ -42,7 +42,77 @@
   until: instances.finished
   retries: "{{ instance_wait_retry_limit }}"
   delay: 10
-  loop: "{{ deploy.results }}"
+  loop: "{{ deploy.results | default([]) }}"
+
+- name: collect nodes with custom boot order
+  set_fact:
+    boot_order_nodes: "{{ nodes | default([]) | selectattr('boot_order', 'defined') | list }}"
+
+- name: set guest boot order
+  community.vmware.vmware_guest_boot_manager:
+    hostname: "{{ lookup('env', 'VMWARE_HOST')|default(providers.vcenter.hostname) }}"
+    username: "{{ lookup('env', 'VMWARE_USER')|default(providers.vcenter.username) }}"
+    password: "{{ lookup('env', 'VMWARE_PASSWORD')|default(providers.vcenter.password) }}"
+    validate_certs: no
+    name: "{{ item.name }}"
+    boot_order: "{{ item.boot_order }}"
+    boot_retry_enabled: true
+    boot_retry_delay: 10000
+  loop: "{{ boot_order_nodes | default([]) }}"
+
+- name: power on instances with custom boot order
+  vmware_guest:
+    hostname: "{{ lookup('env', 'VMWARE_HOST')|default(providers.vcenter.hostname) }}"
+    username: "{{ lookup('env', 'VMWARE_USER')|default(providers.vcenter.username) }}"
+    password: "{{ lookup('env', 'VMWARE_PASSWORD')|default(providers.vcenter.password) }}"
+    validate_certs: no
+    datacenter: "{{ providers.vcenter.datacenter }}"
+    folder: "{{ providers.vcenter.folder|default('') }}"
+    name: "{{ item.name }}"
+    state: poweredon
+    wait_for_ip_address: "{{ item.wait_for_ip_address|default(true) }}"
+  async: 7200
+  poll: 0
+  register: boot_order_power_on_deploy
+  loop: "{{ boot_order_nodes | default([]) }}"
+
+- name: wait for boot-order instances to power on
+  async_status:
+    jid: "{{ item.ansible_job_id }}"
+  register: boot_order_powered_on_instances
+  until: boot_order_powered_on_instances.finished
+  retries: "{{ instance_wait_retry_limit }}"
+  delay: 10
+  loop: "{{ boot_order_power_on_deploy.results | default([]) }}"
+
+- name: initialize merged instance results
+  set_fact:
+    _created_instances_by_name: {}
+    _powered_on_instances_by_name: {}
+    vmware_instances:
+      results: []
+
+- name: index created instances by node name
+  set_fact:
+    _created_instances_by_name: "{{ _created_instances_by_name | combine({ _node.name: item }, recursive=true) }}"
+  vars:
+    _node: "{{ item.item.item | default(item.item) }}"
+  loop: "{{ instances.results | default([]) }}"
+
+- name: index powered-on boot-order instances by node name
+  set_fact:
+    _powered_on_instances_by_name: "{{ _powered_on_instances_by_name | combine({ _node.name: item }, recursive=true) }}"
+  vars:
+    _node: "{{ item.item.item | default(item.item) }}"
+  loop: "{{ boot_order_powered_on_instances.results | default([]) }}"
+
+- name: consolidate instance results
+  set_fact:
+    vmware_instances:
+      results: "{{ vmware_instances.results + [ { 'node': item, 'result': _final_result } ] }}"
+  vars:
+    _final_result: "{{ _powered_on_instances_by_name[item.name] | default(_created_instances_by_name[item.name] | default({})) }}"
+  loop: "{{ nodes | default([]) }}"
 
 - name: add custom attributes
   vmware_guest_custom_attributes:
@@ -50,26 +120,25 @@
     username: "{{ lookup('env', 'VMWARE_USER')|default(providers.vcenter.username) }}"
     password: "{{ lookup('env', 'VMWARE_PASSWORD')|default(providers.vcenter.password) }}"
     validate_certs: no
-    name: "{{ item.item.item.name | default(item.instance.hw_name) }}"
+    name: "{{ item.node.name }}"
     state: present
     attributes:
       - name: environment
-        value: "{{ item.item.item.environment | default('dev') }}"
+        value: "{{ item.node.environment | default('dev') }}"
       - name: app_name
-        value: "{{ item.item.item.app_name | default('') }}"
+        value: "{{ item.node.app_name | default('') }}"
       - name: role
-        value: "{{ item.item.item.role | default('') }}"
-  loop: "{{ instances.results }}"
+        value: "{{ item.node.role | default('') }}"
+  loop: "{{ vmware_instances.results | default([]) }}"
   when:
     - enable_custom_attributes|bool
-    - instances is defined
-    - item.instance is defined
+    - item.result.instance is defined
   ignore_errors: yes
 
 - include_tasks: add_tags.yml
   when:
     - enable_tags|bool
-    - instances is defined
+    - vmware_instances is defined
 
 - name: obtain guest ip address
   vmware_guest_info:
@@ -78,18 +147,18 @@
     password: "{{ lookup('env', 'VMWARE_PASSWORD')|default(providers.vcenter.password) }}"
     validate_certs: no
     datacenter: "{{ providers.vcenter.datacenter }}"
-    name: "{{ item.name }}"
+    name: "{{ item.node.name }}"
     schema: "vsphere"
     properties: [ "guest.ipAddress" ]
   until: guest_ip_address.instance.guest.ipAddress != None
   retries: "{{ ip_wait_retry_limit }}"
   delay: 10
-  loop: "{{ nodes }}"
+  loop: "{{ vmware_instances.results | default([]) }}"
   register: guest_ip_address
-  when: item.wait_for_ip_address|default(true)
+  when: item.node.wait_for_ip_address|default(true)
 
 - debug:
-    msg: "{{ item.item.networks[0].ip | default(item.instance.guest.ipAddress) }}"
+    msg: "{{ item.item.node.networks[0].ip | default(item.instance.guest.ipAddress) }}"
   loop: "{{ guest_ip_address.results }}"
   when:
     - guest_ip_address is defined
@@ -97,12 +166,12 @@
 
 - name: waiting for servers to come online
   wait_for:
-    host: "{{ item.item.networks[0].ip | default(item.instance.guest.ipAddress) }}"
-    port: "{{ item.item.ansible_port | default(ansible_port) | default('22') }}"
+    host: "{{ item.item.node.networks[0].ip | default(item.instance.guest.ipAddress) }}"
+    port: "{{ item.item.node.ansible_port | default(ansible_port) | default('22') }}"
     timeout: "{{ instance_wait_connection_timeout }}"
   loop: "{{ guest_ip_address.results }}"
   when:
     - guest_ip_address is defined
     - item.instance is defined
-    - item.wait_for_ip_address|default(true)
+    - item.item.node.wait_for_ip_address|default(true)
   ignore_errors: yes

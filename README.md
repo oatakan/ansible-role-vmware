@@ -1,31 +1,74 @@
 Role Name
 =========
 
-A brief description of the role goes here.
+An Ansible role for provisioning and deprovisioning virtual machines on VMware vSphere.
 
 Requirements
 ------------
 
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+- Access to a VMware vCenter instance.
+- The VMware modules used by this role, including `community.vmware.vmware_guest_boot_manager`, must be available to Ansible.
+- Environment variables `VMWARE_HOST`, `VMWARE_USER`, and `VMWARE_PASSWORD` can be used to override the configured provider credentials.
 
 Role Variables
 --------------
 
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
+Common variables from `defaults/main.yml`:
+
+- `role_action`: `provision` or `deprovision`
+- `ansible_port`: default SSH/WinRM port used by the connection wait task
+- `instance_wait_retry_limit`: async retry count for create/power operations
+- `instance_wait_connection_timeout`: timeout used when waiting for the guest port
+- `ip_wait_retry_limit`: retry count used while polling vSphere for a guest IP address
+- `enable_custom_attributes`: attach VMware custom attributes after provisioning
+- `enable_tags`: attach VMware tags after provisioning
+
+Per-node variables:
+
+- `name`: virtual machine name
+- `template`: template to clone from
+- `memory`, `cpu`: hardware sizing
+- `networks`, `customization`, `disk`, `datastore`, and other existing `vmware_guest` options supported by this role
+- `wait_for_ip_address`: whether to wait for VMware Tools/IP reporting and guest connectivity
+- `boot_order`: optional non-empty list of boot devices. When set, the role creates the VM powered off, applies the requested boot order, and only then powers the VM on. When omitted, the role keeps the current behavior and clones the VM directly to `poweredon`.
 
 Dependencies
 ------------
 
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+No role dependencies are declared in `meta/main.yml`.
 
 Example Playbook
 ----------------
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
-
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
+```yaml
+- hosts: localhost
+  gather_facts: false
+  vars:
+    role_action: provision
+    providers:
+      vcenter:
+        hostname: vcenter.example.com
+        username: administrator@vsphere.local
+        password: secret
+        datacenter: DC1
+        cluster: Cluster1
+        folder: /DC1/vm
+    nodes:
+      - name: web-01
+        template: rhel9-template
+        memory: 4096
+        cpu: 2
+        wait_for_ip_address: true
+      - name: rescue-01
+        template: rhel9-template
+        memory: 4096
+        cpu: 2
+        boot_order:
+          - disk
+          - ethernet
+  roles:
+    - ansible-role-vmware
+```
 
 License
 -------

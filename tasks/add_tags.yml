@@ -27,17 +27,17 @@
     tag_description: ""
     state: present
   with_nested:
-    - "{{ instances.results }}"
+    - "{{ vmware_instances.results | default([]) }}"
     - "{{ vcenter_category_info.results }}"
   when:
-    - item.0.instance is defined
+    - item.0.result.instance is defined
     - _category_id is defined
     - _category_id | length
     - _tag_name | length
   vars:
     _category_id: "{{ item.1.category_results.category_id }}"
     _category_name: "{{ item.1.item }}"
-    _tag_name: "{{ item.0.item.item[_category_name] | default('') }}"
+    _tag_name: "{{ item.0.node[_category_name] | default('') }}"
   ignore_errors: yes
 
 - name: ensure tags are attached
@@ -46,17 +46,17 @@
     username: "{{ lookup('env', 'VMWARE_USER')|default(providers.vcenter.username) }}"
     password: "{{ lookup('env', 'VMWARE_PASSWORD')|default(providers.vcenter.password) }}"
     validate_certs: no
-    object_name: "{{ item.item.item.name | default(item.instance.hw_name) }}"
+    object_name: "{{ item.node.name }}"
     object_type: VirtualMachine
     state: present
     tag_names:
-      - tag: "{{ item.item.item.environment | default('dev') }}"
+      - tag: "{{ item.node.environment | default('dev') }}"
         category: environment
-      - tag: "{{ item.item.item.app_name | default('no_app_specified') }}"
+      - tag: "{{ item.node.app_name | default('no_app_specified') }}"
         category: app_name
-      - tag: "{{ item.item.item.role | default('no_role_specified') }}"
+      - tag: "{{ item.node.role | default('no_role_specified') }}"
         category: role
-  loop: "{{ instances.results }}"
+  loop: "{{ vmware_instances.results | default([]) }}"
   when:
-    - item.instance is defined
+    - item.result.instance is defined
   ignore_errors: yes

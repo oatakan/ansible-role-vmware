@@ -17,3 +17,13 @@
 - name: ensure ansible_port variable is defined per node
   set_fact:
     nodes: "{{ existing_nodes|default([]) + linux_nodes|default([]) + windows_nodes|default([]) }}"
+
+- name: ensure boot_order is a non-empty list when specified
+  assert:
+    that:
+      - item.boot_order is sequence
+      - item.boot_order is not string
+      - item.boot_order | length > 0
+    fail_msg: "Node {{ item.name | default('unknown') }} boot_order must be a non-empty list."
+  loop: "{{ nodes | default([]) }}"
+  when: item.boot_order is defined
