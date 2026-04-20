@@ -16,28 +16,40 @@
     - app_name
     - role
 
+- name: index category ids by name
+  set_fact:
+    vmware_category_ids: "{{ vmware_category_ids | default({}) | combine({ item.item: item.category_results.category_id }) }}"
+  loop: "{{ vcenter_category_info.results | default([]) }}"
+  when:
+    - item.category_results is defined
+    - item.category_results.category_id is defined
+
+- name: collect desired tags per instance
+  set_fact:
+    vmware_instance_tags: "{{ vmware_instance_tags | default([]) + [ { 'node': item.node, 'result': item.result, 'tags': _tag_names } ] }}"
+  loop: "{{ vmware_instances.results | default([]) }}"
+  vars:
+    _tag_names: "{{ [
+      {'tag': item.node.environment | default(''), 'category': 'environment'},
+      {'tag': item.node.app_name | default(''), 'category': 'app_name'},
+      {'tag': item.node.role | default(''), 'category': 'role'}
+    ] | selectattr('tag') | list }}"
+
 - name: ensure tag names exists
   vmware_tag:
     hostname: "{{ lookup('env', 'VMWARE_HOST')|default(providers.vcenter.hostname) }}"
     username: "{{ lookup('env', 'VMWARE_USER')|default(providers.vcenter.username) }}"
     password: "{{ lookup('env', 'VMWARE_PASSWORD')|default(providers.vcenter.password) }}"
     validate_certs: no
-    category_id: "{{ _category_id }}"
-    tag_name: "{{ _tag_name }}"
+    category_id: "{{ vmware_category_ids[item.1.category] }}"
+    tag_name: "{{ item.1.tag }}"
     tag_description: ""
     state: present
-  with_nested:
-    - "{{ vmware_instances.results | default([]) }}"
-    - "{{ vcenter_category_info.results }}"
+  loop: "{{ query('subelements', vmware_instance_tags | default([]), 'tags') }}"
   when:
     - item.0.result.instance is defined
-    - _category_id is defined
-    - _category_id | length
-    - _tag_name | length
-  vars:
-    _category_id: "{{ item.1.category_results.category_id }}"
-    _category_name: "{{ item.1.item }}"
-    _tag_name: "{{ item.0.node[_category_name] | default('') }}"
+    - vmware_category_ids is defined
+    - vmware_category_ids[item.1.category] is defined
   ignore_errors: yes
 
 - name: ensure tags are attached
@@ -49,14 +61,9 @@
     object_name: "{{ item.node.name }}"
     object_type: VirtualMachine
     state: present
-    tag_names:
-      - tag: "{{ item.node.environment | default('dev') }}"
-        category: environment
-      - tag: "{{ item.node.app_name | default('no_app_specified') }}"
-        category: app_name
-      - tag: "{{ item.node.role | default('no_role_specified') }}"
-        category: role
-  loop: "{{ vmware_instances.results | default([]) }}"
+    tag_names: "{{ item.tags }}"
+  loop: "{{ vmware_instance_tags | default([]) }}"
   when:
     - item.result.instance is defined
+    - item.tags | length > 0
   ignore_errors: yes
